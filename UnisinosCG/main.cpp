@@ -16,7 +16,7 @@
 #include <iostream>
 #include <vector>
 #include "TileMap.h"
-//#include "DiamondView.h"
+#include "DiamondView.h"
 #include "SlideView.h"
 #include "ltMath.h"
 #include <fstream>
@@ -44,8 +44,8 @@ float tileW, tileW2;
 float tileH, tileH2;
 int cx = -1, cy = -1;
 
-//TilemapView* tview = new DiamondView();
- TilemapView *tview = new SlideView();
+TilemapView* tview = new DiamondView();
+//TilemapView *tview = new SlideView();
 TileMap* tmap = NULL;
 
 GLFWwindow* g_window = NULL;
