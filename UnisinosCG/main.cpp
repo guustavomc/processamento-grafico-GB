@@ -219,16 +219,51 @@ int main()
 #pragma endregion
 
 #pragma region carregamento de texturas e associação com tmap
+	// cenario
 	GLuint tid;
 	loadTexture(tid, "images/terrain.png");
 
 
 	tmap->setTid(tid);
 	cout << "Tmap inicializado" << endl;
+
+	unsigned int texturaObjeto;
+	glGenTextures(1, &texturaObjeto);
+	glBindTexture(GL_TEXTURE_2D, texturaObjeto);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+	GLfloat max_aniso = 0.0f;
+	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_aniso);
+	// set the maximum!
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_aniso);
+
+	int width, height, nrChannels;
+
+	// unsigned char *data = stbi_load("spritesheet-muybridge.jpg", &width, &height, &nrChannels, 0);
+	//unsigned char* data = stbi_load("spritesheet-muybridge.png", &width, &height, &nrChannels, 0);
+	// MAPEAMENTO PARA SULLY
+	unsigned char* data = stbi_load("images/sully.png", &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		// MAPEAMENTO PARA SULLY
+		// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
 #pragma endregion
 
 #pragma region vértices
-	float vertices[] = {
+	float verticesCenario[] = {
 		// positions   // texture coords
 		xi    , yi + th2, 0.0f, tileH2,   // left
 		xi + tw2, yi    , tileW2, 0.0f,   // bottom
@@ -239,28 +274,46 @@ int main()
 		0, 1, 3, // first triangle
 		3, 1, 2  // second triangle
 	};
+
+	float verticesObjeto[] = {
+		 0.5f, 0.5f, 0.25f, 0.25f, // top right
+		 0.5f, -0.5f, 0.25f, 0.0f, // bottom right
+		 -0.5f, -0.5f, 0.0f, 0.0f, // bottom left
+		 -0.5f, 0.5f, 0.0f, 0.25f, // top left
+	};
 #pragma endregion
 
 #pragma region passagem dados para GPU
-	unsigned int VBO, VAO, EBO;
+	unsigned int VBOCenario, VBOObjeto, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &VBOCenario);
+	glGenBuffers(1, &VBOObjeto);
 	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
+	// cenário
+	glBindBuffer(GL_ARRAY_BUFFER, VBOCenario);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCenario), verticesCenario, GL_STATIC_DRAW);
 	// position attribute
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	// texture coord attribute
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	// objeto
+	glBindBuffer(GL_ARRAY_BUFFER, VBOObjeto);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesObjeto), verticesObjeto, GL_STATIC_DRAW);
+	// position attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(2);
+	// texture coord attribute
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(3);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 #pragma endregion
 
 #pragma region shaders
@@ -316,10 +369,6 @@ int main()
 		return false;
 	}
 #pragma endregion
-
-	float previous = glfwGetTime();
-
-
 	for (int r = 0; r < tmap->getHeight(); r++) {
 		for (int c = 0; c < tmap->getWidth(); c++) {
 			unsigned char t_id = tmap->getTile(c, r);
@@ -331,6 +380,17 @@ int main()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	// glEnable(GL_DEPTH_TEST);
+
+#pragma region inicialização das variáveis
+	float fw = 0.25f;
+	float fh = 0.25f;
+	float offsetx = 0, offsety = 0;
+	int frameAtual = 0;
+	int acao = 3;
+	int sign = 1;
+	float previous = glfwGetTime();
+#pragma endregion
+
 	while (!glfwWindowShouldClose(g_window))
 	{
 		_update_fps_counter(g_window);
@@ -353,7 +413,11 @@ int main()
 		glBindVertexArray(VAO);
 #pragma endregion
 
-#pragma region passagem de informações aos shaders e desenho do tilemap
+#pragma region passagem de informações aos shaders e desenho do cenario
+		glBindBuffer(GL_ARRAY_BUFFER, VBOCenario);
+		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), false);
+		glUniform1f(glGetUniformLocation(shader_programme, "isObjectx"), false);
+
 		//para cada linha e columa da matriz é calculada a posição de desenho chamando computeDrawPosition
 		float x, y;
 		int r = 0, c = 0;
@@ -370,17 +434,52 @@ int main()
 				glUniform1f(glGetUniformLocation(shader_programme, "offsety"), v * tileH);
 				glUniform1f(glGetUniformLocation(shader_programme, "tx"), x);
 				glUniform1f(glGetUniformLocation(shader_programme, "ty"), y + 1.0);
-				glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), tmap->getZ());
+				glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.50);
+		
 				//adiciona cor ao tile selecionado
 				glUniform1f(glGetUniformLocation(shader_programme, "weight"), (c == cx) && (r == cy) ? 0.5 : 0.0);
 
 				// bind Texture
 				// glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, tmap->getTileSet());
-				glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
+				glUniform1i(glGetUniformLocation(shader_programme, "spriteCenario"), 0);
 				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			}
 		}
+#pragma endregion
+
+#pragma region Objeto
+		glBindBuffer(GL_ARRAY_BUFFER, VBOObjeto);
+		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
+		glUniform1f(glGetUniformLocation(shader_programme, "isObjectx"), true);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texturaObjeto);
+		glUniform1i(glGetUniformLocation(shader_programme, "spriteObjeto"), 0);
+
+		glUseProgram(shader_programme);
+		glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), offsetx);
+		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
+		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.40);
+
+		if ((current_seconds - previous) > (0.16))
+		{
+			previous = current_seconds;
+
+			// CALCULA TROCA DE LINHA
+			if (frameAtual == 3)
+			{
+				acao = (4 + (acao - 1)) % 4;
+				frameAtual = 0;
+			}
+			else
+			{
+				frameAtual = (frameAtual + 1) % 4;
+			}
+
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
+		}
+		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 #pragma endregion
 
 #pragma region Eventos
