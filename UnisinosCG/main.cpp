@@ -45,7 +45,6 @@ float tileH, tileH2;
 int cx = -1, cy = -1;
 
 TilemapView* tview = new DiamondView();
-//TilemapView *tview = new SlideView();
 TileMap* tmap = NULL;
 
 GLFWwindow* g_window = NULL;
@@ -192,13 +191,16 @@ void mouse(double& mx, double& my) {
 
 int main()
 {
+#pragma region inicialização do OpenGL
 	restart_gl_log();
 	// all the GLFW and GLEW start-up code is moved to here in gl_utils.cpp
 	start_gl();
 	// tell GL to only draw onto a pixel if the shape is closer to the viewer
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
 	glDepthFunc(GL_LESS);
+#pragma endregion
 
+#pragma region carregamento do tmap
 	cout << "Tentando criar tmap" << endl;
 	tmap = readMap("terrain1.tmap");
 	tw = w / (float)tmap->getWidth();
@@ -214,17 +216,18 @@ int main()
 		<< " tileW=" << tileW << " tileH=" << tileH
 		<< " tileW2=" << tileW2 << " tileH2=" << tileH2
 		<< endl;
+#pragma endregion
 
+#pragma region carregamento de texturas e associação com tmap
 	GLuint tid;
 	loadTexture(tid, "images/terrain.png");
 
+
 	tmap->setTid(tid);
 	cout << "Tmap inicializado" << endl;
+#pragma endregion
 
-	// LOAD TEXTURES
-
-	// set up vertex data (and buffer(s)) and configure vertex attributes
-	// ------------------------------------------------------------------
+#pragma region vértices
 	float vertices[] = {
 		// positions   // texture coords
 		xi    , yi + th2, 0.0f, tileH2,   // left
@@ -236,7 +239,9 @@ int main()
 		0, 1, 3, // first triangle
 		3, 1, 2  // second triangle
 	};
+#pragma endregion
 
+#pragma region passagem dados para GPU
 	unsigned int VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -256,7 +261,9 @@ int main()
 	// texture coord attribute
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+#pragma endregion
 
+#pragma region shaders
 	char vertex_shader[1024 * 256];
 	char fragment_shader[1024 * 256];
 	parse_file_into_str("_geral_vs.glsl", vertex_shader, 1024 * 256);
@@ -266,7 +273,9 @@ int main()
 	const GLchar* p = (const GLchar*)vertex_shader;
 	glShaderSource(vs, 1, &p, NULL);
 	glCompileShader(vs);
+#pragma endregion
 
+#pragma region  check for compile errors
 	// check for compile errors
 	int params = -1;
 	glGetShaderiv(vs, GL_COMPILE_STATUS, &params);
@@ -290,7 +299,9 @@ int main()
 		print_shader_info_log(fs);
 		return 1; // or exit or something
 	}
+#pragma endregion
 
+#pragma region cria programa e linka os shaders com o shader program
 	GLuint shader_programme = glCreateProgram();
 	glAttachShader(shader_programme, fs);
 	glAttachShader(shader_programme, vs);
@@ -304,6 +315,7 @@ int main()
 		// 		print_programme_info_log( shader_programme );
 		return false;
 	}
+#pragma endregion
 
 	float previous = glfwGetTime();
 
@@ -324,20 +336,30 @@ int main()
 		_update_fps_counter(g_window);
 		double current_seconds = glfwGetTime();
 
+#pragma region limpa a tela
 		// wipe the drawing surface clear
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// glClear(GL_COLOR_BUFFER_BIT);
+#pragma endregion
 
 		glViewport(0, 0, g_gl_width, g_gl_height);
 
+#pragma region define programa
 		glUseProgram(shader_programme);
+#pragma endregion
 
+#pragma region bind da geometria
 		glBindVertexArray(VAO);
+#pragma endregion
+
+#pragma region passagem de informações aos shaders e desenho do tilemap
+		//para cada linha e columa da matriz é calculada a posição de desenho chamando computeDrawPosition
 		float x, y;
 		int r = 0, c = 0;
 		for (int r = 0; r < tmap->getHeight(); r++) {
 			for (int c = 0; c < tmap->getWidth(); c++) {
+				//t_id: nº do tile na matriz usado para calcular a porção da textura que deve ser apresentada nesse tile
 				int t_id = (int)tmap->getTile(c, r);
 				int u = t_id % tileSetCols;
 				int v = t_id / tileSetCols;
@@ -349,6 +371,7 @@ int main()
 				glUniform1f(glGetUniformLocation(shader_programme, "tx"), x);
 				glUniform1f(glGetUniformLocation(shader_programme, "ty"), y + 1.0);
 				glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), tmap->getZ());
+				//adiciona cor ao tile selecionado
 				glUniform1f(glGetUniformLocation(shader_programme, "weight"), (c == cx) && (r == cy) ? 0.5 : 0.0);
 
 				// bind Texture
@@ -357,9 +380,10 @@ int main()
 				glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			}
-
 		}
+#pragma endregion
 
+#pragma region Eventos
 		glfwPollEvents();
 		if (GLFW_PRESS == glfwGetKey(g_window, GLFW_KEY_ESCAPE))
 		{
@@ -379,6 +403,7 @@ int main()
 		if (state == GLFW_PRESS) {
 			mouse(mx, my);
 		}
+#pragma endregion
 
 		// put the stuff we've been drawing onto the display
 		glfwSwapBuffers(g_window);
