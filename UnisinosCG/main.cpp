@@ -416,7 +416,6 @@ int main()
 #pragma region passagem de informações aos shaders e desenho do cenario
 		glBindBuffer(GL_ARRAY_BUFFER, VBOCenario);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), false);
-		glUniform1f(glGetUniformLocation(shader_programme, "isObjectx"), false);
 
 		//para cada linha e columa da matriz é calculada a posição de desenho chamando computeDrawPosition
 		float x, y;
@@ -442,7 +441,7 @@ int main()
 				// bind Texture
 				// glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, tmap->getTileSet());
-				glUniform1i(glGetUniformLocation(shader_programme, "spriteCenario"), 0);
+				glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			}
 		}
@@ -451,10 +450,9 @@ int main()
 #pragma region Objeto
 		glBindBuffer(GL_ARRAY_BUFFER, VBOObjeto);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
-		glUniform1f(glGetUniformLocation(shader_programme, "isObjectx"), true);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texturaObjeto);
-		glUniform1i(glGetUniformLocation(shader_programme, "spriteObjeto"), 0);
+		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 
 		glUseProgram(shader_programme);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), offsetx);
