@@ -14,10 +14,10 @@ uniform bool isObject;
 void main () {
     if(isObject){
 		texture_coords = texture_mapping_objeto;
-		gl_Position = vec4(vertex_position_objeto.x + tx, vertex_position_objeto.y + ty, layer_z, 1.0);
+		gl_Position = vec4(vertex_position_objeto.x + tx, vertex_position_objeto.y + ty, 0.10, 1.0);
 	}
 	else {
 		texture_coords = texture_mapping_cenario;
-		gl_Position = vec4(vertex_position_cenario.x + tx, vertex_position_cenario.y + ty, layer_z, 1.0);
+		gl_Position = vec4(vertex_position_cenario.x + tx, vertex_position_cenario.y + ty, 0.50, 1.0);
 	}
 }

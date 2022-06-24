@@ -276,10 +276,10 @@ int main()
 	};
 
 	float verticesObjeto[] = {
-		 0.5f, 0.5f, 0.25f, 0.25f, // top right
-		 0.5f, -0.5f, 0.25f, 0.0f, // bottom right
-		 -0.5f, -0.5f, 0.0f, 0.0f, // bottom left
-		 -0.5f, 0.5f, 0.0f, 0.25f, // top left
+		 -1.5f, -0.5f, 0.25f, 0.25f, // top right
+		 -1.5f, -1.5f, 0.25f, 0.0f, // bottom right
+		 -2.0f, -1.5f, 0.0f, 0.0f, // bottom left
+		 -2.0f, -0.5f, 0.0f, 0.25f, // top left
 	};
 #pragma endregion
 
@@ -457,7 +457,7 @@ int main()
 		glUseProgram(shader_programme);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), offsetx);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
-		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.40);
+		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0);
 
 		if ((current_seconds - previous) > (0.16))
 		{
@@ -477,7 +477,7 @@ int main()
 			offsetx = fw * (float)frameAtual;
 			offsety = fh * (float)acao;
 		}
-		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 #pragma endregion
 
 #pragma region Eventos
