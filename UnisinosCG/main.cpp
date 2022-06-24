@@ -457,7 +457,7 @@ int main()
 		glUseProgram(shader_programme);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), offsetx);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
-		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0);
+		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
 
 		if ((current_seconds - previous) > (0.16))
 		{
