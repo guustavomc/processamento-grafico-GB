@@ -277,8 +277,8 @@ int main()
 
 	float verticesObjeto[] = {
 		 -1.5f, -0.5f, 0.25f, 0.25f, // top right
-		 -1.5f, -1.5f, 0.25f, 0.0f, // bottom right
-		 -2.0f, -1.5f, 0.0f, 0.0f, // bottom left
+		 -1.5f, -1.0f, 0.25f, 0.0f, // bottom right
+		 -2.0f, -1.0f, 0.0f, 0.0f, // bottom left
 		 -2.0f, -0.5f, 0.0f, 0.25f, // top left
 	};
 #pragma endregion
