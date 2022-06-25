@@ -42,10 +42,11 @@ float tw, th, tw2, th2;
 int tileSetCols = 9, tileSetRows = 9;
 float tileW, tileW2;
 float tileH, tileH2;
-int cx = -1, cy = -1;
+int cx = 0, cy = 0;
 
 TilemapView* tview = new DiamondView();
 TileMap* tmap = NULL;
+TileMap* collideMap = NULL;
 
 GLFWwindow* g_window = NULL;
 
@@ -112,80 +113,19 @@ void SRD2SRU(double& mx, double& my, float& x, float& y) {
 	y = yi + (1 - (my / g_gl_height)) * h;
 }
 
-void mouse(double& mx, double& my) {
+void moveObject(int c, int r, const int direction) {
+	tview->computeTileWalking(c, r, direction);
 
-	// cout << "DEBUG => mouse click" << endl;
-
-	// 1) Definição do tile candidato ao clique
-	float y = 0;
-	float x = 0;
-	SRD2SRU(mx, my, x, y);
-
-	int c, r;
-	tview->computeMouseMap(c, r, tw, th, x, y);
-	c += (tmap->getWidth() - 1) / 2;
-	r += (tmap->getHeight() - 1) / 2;
-	// cout << "\tDEBUG => r: " << r << " c: " << c << endl;
-
-	// 2) Verificar se o ponto pertence ao tile indicado:
-
-	// 2.1) Normalização do clique:
-	float x0, y0;
-	tview->computeDrawPosition(c, r, tw, th, x0, y0);
-	x0 += xi;
-
-	// cout << "\tDEBUG => mx: " << x  << " my: " << y  << endl;
-	// cout << "\tDEBUG => x0: " << x0 << " y0: " << y0 << endl;
-	// cout << "\tDEBUG => tw: " << tw << endl;
-
-	float point[] = { x, y };
-
-	// 2.2) Verifica se o ponto está dentro do triângulo da esquerda ou da direita do losangulo (metades)
-	//      Implementação via cálculo de área dos triangulos: area(ABC) == area(ABp)+area(ACp)+area(BCp)
-	// triangulo ABC:
-	float* abc = new float[6];
-
-	// 2.2.1) Define metade da esquerda ou da direita
-	bool left = x < (x0 + tw / 2.0f);
-	// cout << "\tDEBUG => mx: " << x << " midx: " << (x0 + tw/2.0f) << endl; 
-
-	if (left) { // left
-		abc[0] = x0;           abc[1] = y0 + th / 2.0f;
-		abc[2] = x0 + tw / 2.0f; abc[3] = y0 + th;
-		abc[4] = x0 + tw / 2.0f; abc[5] = y0;
-		// cout << "DEBUG => TRG LFT [(x,y),...] = ([" << abc[0] << "," << abc[1] << "], "
-		// << "[" << abc[2] << "," << abc[3] << "], "
-		// << "[" << abc[4] << "," << abc[5] << "])" << endl;
-	}
-	else { // right
-		abc[0] = x0 + tw / 2.0f; abc[1] = y0;
-		abc[2] = x0 + tw / 2.0f; abc[3] = y0 + th;
-		abc[4] = x0 + tw;      abc[5] = y0 + th / 2.0f;
-		// cout << "DEBUG => TRG RGHT [(x,y),...] = ([" << abc[0] << "," << abc[1] << "], "
-		// << "[" << abc[2] << "," << abc[3] << "], "
-		// << "[" << abc[4] << "," << abc[5] << "])" << endl;
-	}
-
-	// 2.3) Calcular colisão do ponto com o triangulo
-	bool collide = triangleCollidePoint2D(abc, point);
-
-	if (!collide) {
-		// 2.4) Em caso "erro" de cálculo, deve ser feito o tileWalking para tile certo!
-		cout << "tileWalking " << endl;
-		if (left) {
-			tview->computeTileWalking(c, r, DIRECTION_WEST);
-		}
-		else {
-			tview->computeTileWalking(c, r, DIRECTION_EAST);
-		}
-	}
-
-	if ((c < 0) || (c >= tmap->getWidth()) || (r < 0) || (r >= tmap->getHeight())) {
-		cout << "wrong click position: " << c << ", " << r << endl;
+	if ((c < 0) || (c >= collideMap->getWidth()) || (r < 0) || (r >= collideMap->getHeight())) {
+		cout << "Fora do mapa: " << c << ", " << r << endl;
 		return; // posição inválida!
 	}
 
-	cout << "SELECIONADO c=" << c << "," << r << endl;
+	unsigned char t_id = collideMap->getTile(c, r);
+	if(t_id == 0) cout << "Terra" << endl;
+	else if(t_id == 1) cout << "Agua" << endl;
+
+	cout << "Posicao c=" << c << "," << r << endl;
 	cx = c; cy = r;
 }
 
@@ -200,9 +140,10 @@ int main()
 	glDepthFunc(GL_LESS);
 #pragma endregion
 
-#pragma region carregamento do tmap
+#pragma region carregamento do tmap e collideMap
 	cout << "Tentando criar tmap" << endl;
 	tmap = readMap("terrain1.tmap");
+	collideMap = readMap("collide.tmap");
 	tw = w / (float)tmap->getWidth();
 	th = tw / 2.0f;
 	tw2 = th;
@@ -391,6 +332,11 @@ int main()
 	float previous = glfwGetTime();
 #pragma endregion
 
+	bool rightPressed = false;
+	bool leftPressed = false;
+	bool upPressed = false;
+	bool downPressed = false;
+
 	while (!glfwWindowShouldClose(g_window))
 	{
 		_update_fps_counter(g_window);
@@ -455,6 +401,11 @@ int main()
 		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 
 		glUseProgram(shader_programme);
+
+		float tx, ty;
+		tview->computeDrawPosition(cx, cy, tw, th, tx, ty);
+		glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 +  tx);
+		glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), offsetx);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
 		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
@@ -482,24 +433,48 @@ int main()
 
 #pragma region Eventos
 		glfwPollEvents();
+
 		if (GLFW_PRESS == glfwGetKey(g_window, GLFW_KEY_ESCAPE))
 		{
 			glfwSetWindowShouldClose(g_window, 1);
 		}
-		if (GLFW_PRESS == glfwGetKey(g_window, GLFW_KEY_UP))
-		{
-		}
-		if (GLFW_PRESS == glfwGetKey(g_window, GLFW_KEY_DOWN))
-		{
-		}
-		double mx, my;
-		glfwGetCursorPos(g_window, &mx, &my);
 
-		const int state = glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT);
-
-		if (state == GLFW_PRESS) {
-			mouse(mx, my);
+		const int rightState = glfwGetKey(g_window, GLFW_KEY_RIGHT);
+		if (GLFW_PRESS == rightState) {
+			rightPressed = true;
 		}
+		if (GLFW_RELEASE == rightState && rightPressed) {
+			moveObject(cx, cy, DIRECTION_EAST);
+			rightPressed = false;
+		}
+
+		const int leftState = glfwGetKey(g_window, GLFW_KEY_LEFT);
+		if (GLFW_PRESS == leftState) {
+			leftPressed = true;
+		}
+		if (GLFW_RELEASE == leftState && leftPressed) {
+			moveObject(cx, cy, DIRECTION_WEST);
+			leftPressed = false;
+		}
+
+		const int upState = glfwGetKey(g_window, GLFW_KEY_UP);
+		if (GLFW_PRESS == upState) {
+			upPressed = true;
+		}
+		if (GLFW_RELEASE == upState && upPressed) {
+			moveObject(cx, cy, DIRECTION_NORTH);
+			upPressed = false;
+		}
+
+		const int downState = glfwGetKey(g_window, GLFW_KEY_DOWN);
+		if (GLFW_PRESS == downState) {
+			downPressed = true;
+		}
+		if (GLFW_RELEASE == downState && downPressed) {
+			moveObject(cx, cy, DIRECTION_SOUTH);
+			downPressed = false;
+		}
+		
 #pragma endregion
 
 		// put the stuff we've been drawing onto the display
@@ -509,6 +484,7 @@ int main()
 	// close GL context and any other GLFW resources
 	glfwTerminate();
 	delete tmap;
+	delete collideMap;
 	return 0;
 }
 
