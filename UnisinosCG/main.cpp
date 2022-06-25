@@ -133,7 +133,7 @@ void moveObject(int c, int r, const int direction) {
 	unsigned char t_id = collideMap->getTile(c, r);
 	if(t_id == 0) cout << "Terra" << endl;
 	else if (t_id == 1) {
-		cout << "Ops! Voce deixou o Sully cair na agua... Pressione espa�o para reiniciar a partida" << endl;
+		cout << "Ops! Voce deixou o Sully cair na agua... Pressione espaco para reiniciar a partida" << endl;
 		jogoFinalizado = true;
 		cx = -1;
 		cy = -1;
@@ -153,7 +153,7 @@ void restart() {
 int main()
 {
 
-#pragma region inicializa��o do OpenGL
+#pragma region inicializacao do OpenGL
 	restart_gl_log();
 	// all the GLFW and GLEW start-up code is moved to here in gl_utils.cpp
 	start_gl();
@@ -181,7 +181,7 @@ int main()
 	//	<< endl;
 #pragma endregion
 
-#pragma region carregamento de texturas e associa��o com tmap
+#pragma region carregamento de texturas e associacao com tmap
 	// cenario
 	GLuint tid;
 	loadTexture(tid, "images/terrain.png");
@@ -225,7 +225,7 @@ int main()
 	stbi_image_free(data);
 #pragma endregion
 
-#pragma region v�rtices
+#pragma region vertices
 	float verticesCenario[] = {
 		// positions   // texture coords
 		xi    , yi + th2, 0.0f, tileH2,   // left
@@ -345,11 +345,11 @@ int main()
 	// glEnable(GL_DEPTH_TEST);
 
 
-#pragma region instru��es
-	cout << "Jogo iniciado! Sully tem a miss�o de atravessar o mapa sem se molhar, ajude-o nesta jornada. Boa sorte!" << endl;
+#pragma region instrucoes
+	cout << "Jogo iniciado! Sully tem a missao de atravessar o mapa sem se molhar, ajude-o nesta jornada. Boa sorte!" << endl;
 #pragma endregion
 
-#pragma region inicializa��o das vari�veis
+#pragma region inicializacao das variaveis
 	float fw = 0.25f;
 	float fh = 0.25f;
 	float offsetx = 0, offsety = 0;
@@ -387,7 +387,7 @@ int main()
 		glBindVertexArray(VAO);
 #pragma endregion
 
-#pragma region passagem de informa��es aos shaders e desenho do cenario
+#pragma region passagem de informacoes aos shaders e desenho do cenario
 		glBindBuffer(GL_ARRAY_BUFFER, VBOCenario);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), false);
 
