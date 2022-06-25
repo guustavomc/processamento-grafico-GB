@@ -119,11 +119,11 @@ void moveObject(int c, int r, const int direction) {
 
 	if ((c < 0) || (c >= collideMap->getWidth()) || (r < 0) || (r >= collideMap->getHeight())) {
 		cout << "Fora do mapa: " << c << ", " << r << endl;
-		return; // posição inválida!
+		return; // posiï¿½ï¿½o invï¿½lida!
 	}
 
 	if (c == 9) {
-		cout << "Muito bem! Sully esta muito feliz por ter chegado ao outro lado do mapa! Pressione espaço se quiser reiniciar a partida" << endl;
+		cout << "Muito bem! Sully esta muito feliz por ter chegado ao outro lado do mapa! Pressione espaï¿½o se quiser reiniciar a partida" << endl;
 		jogoFinalizado = true;
 		cx = -1;
 		cy = -1;
@@ -133,7 +133,7 @@ void moveObject(int c, int r, const int direction) {
 	unsigned char t_id = collideMap->getTile(c, r);
 	if(t_id == 0) cout << "Terra" << endl;
 	else if (t_id == 1) {
-		cout << "Ops! Voce deixou o Sully cair na agua... Pressione espaço para reiniciar a partida" << endl;
+		cout << "Ops! Voce deixou o Sully cair na agua... Pressione espaï¿½o para reiniciar a partida" << endl;
 		jogoFinalizado = true;
 		cx = -1;
 		cy = -1;
@@ -153,7 +153,7 @@ void restart() {
 int main()
 {
 
-#pragma region inicialização do OpenGL
+#pragma region inicializaï¿½ï¿½o do OpenGL
 	restart_gl_log();
 	// all the GLFW and GLEW start-up code is moved to here in gl_utils.cpp
 	start_gl();
@@ -181,7 +181,7 @@ int main()
 	//	<< endl;
 #pragma endregion
 
-#pragma region carregamento de texturas e associação com tmap
+#pragma region carregamento de texturas e associaï¿½ï¿½o com tmap
 	// cenario
 	GLuint tid;
 	loadTexture(tid, "images/terrain.png");
@@ -225,7 +225,7 @@ int main()
 	stbi_image_free(data);
 #pragma endregion
 
-#pragma region vértices
+#pragma region vï¿½rtices
 	float verticesCenario[] = {
 		// positions   // texture coords
 		xi    , yi + th2, 0.0f, tileH2,   // left
@@ -255,7 +255,7 @@ int main()
 
 	glBindVertexArray(VAO);
 
-	// cenário
+	// cenï¿½rio
 	glBindBuffer(GL_ARRAY_BUFFER, VBOCenario);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCenario), verticesCenario, GL_STATIC_DRAW);
 	// position attribute
@@ -345,11 +345,11 @@ int main()
 	// glEnable(GL_DEPTH_TEST);
 
 
-#pragma region instruções
-	cout << "Jogo iniciado! Sully tem a missão de atravessar o mapa sem se molhar, ajude-o nesta jornada. Boa sorte!" << endl;
+#pragma region instruï¿½ï¿½es
+	cout << "Jogo iniciado! Sully tem a missï¿½o de atravessar o mapa sem se molhar, ajude-o nesta jornada. Boa sorte!" << endl;
 #pragma endregion
 
-#pragma region inicialização das variáveis
+#pragma region inicializaï¿½ï¿½o das variï¿½veis
 	float fw = 0.25f;
 	float fh = 0.25f;
 	float offsetx = 0, offsety = 0;
@@ -387,16 +387,16 @@ int main()
 		glBindVertexArray(VAO);
 #pragma endregion
 
-#pragma region passagem de informações aos shaders e desenho do cenario
+#pragma region passagem de informaï¿½ï¿½es aos shaders e desenho do cenario
 		glBindBuffer(GL_ARRAY_BUFFER, VBOCenario);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), false);
 
-		//para cada linha e columa da matriz é calculada a posição de desenho chamando computeDrawPosition
+		//para cada linha e columa da matriz ï¿½ calculada a posiï¿½ï¿½o de desenho chamando computeDrawPosition
 		float x, y;
 		int r = 0, c = 0;
 		for (int r = 0; r < tmap->getHeight(); r++) {
 			for (int c = 0; c < tmap->getWidth(); c++) {
-				//t_id: nº do tile na matriz usado para calcular a porção da textura que deve ser apresentada nesse tile
+				//t_id: nï¿½ do tile na matriz usado para calcular a porï¿½ï¿½o da textura que deve ser apresentada nesse tile
 				int t_id = (int)tmap->getTile(c, r);
 				int u = t_id % tileSetCols;
 				int v = t_id / tileSetCols;
@@ -438,24 +438,6 @@ int main()
 		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
 		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
 
-		if ((current_seconds - previous) > (0.16))
-		{
-			previous = current_seconds;
-
-			// CALCULA TROCA DE LINHA
-			if (frameAtual == 3)
-			{
-				acao = (4 + (acao - 1)) % 4;
-				frameAtual = 0;
-			}
-			else
-			{
-				frameAtual = (frameAtual + 1) % 4;
-			}
-
-			offsetx = fw * (float)frameAtual;
-			offsety = fh * (float)acao;
-		}
 		if(!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 #pragma endregion
 
@@ -473,6 +455,10 @@ int main()
 		}
 		if (GLFW_RELEASE == rightState && rightPressed) {
 			moveObject(cx, cy, DIRECTION_EAST);
+			acao = (4 + (1)) % 4;
+			frameAtual = (frameAtual + 1) % 4;
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
 			rightPressed = false;
 		}
 
@@ -482,6 +468,10 @@ int main()
 		}
 		if (GLFW_RELEASE == leftState && leftPressed) {
 			moveObject(cx, cy, DIRECTION_WEST);
+			acao = (4 + (2)) % 4;
+			frameAtual = (frameAtual + 1) % 4;
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
 			leftPressed = false;
 		}
 
@@ -491,6 +481,10 @@ int main()
 		}
 		if (GLFW_RELEASE == upState && upPressed) {
 			moveObject(cx, cy, DIRECTION_NORTH);
+			acao = (4 + (0)) % 4;
+			frameAtual = (frameAtual + 1) % 4;
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
 			upPressed = false;
 		}
 
@@ -500,6 +494,10 @@ int main()
 		}
 		if (GLFW_RELEASE == downState && downPressed) {
 			moveObject(cx, cy, DIRECTION_SOUTH);
+			acao = (4 + (3)) % 4;
+			frameAtual = (frameAtual + 1) % 4;
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
 			downPressed = false;
 		}
 
