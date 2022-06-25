@@ -35,20 +35,16 @@ public:
     void computeTileWalking(int &col, int &row, const int direction) const {
         switch(direction){
             case DIRECTION_NORTH: 
-                col ++;
                 row --;
                 break;
             case DIRECTION_EAST: 
                 col ++;
-                row ++;
                 break;
             case DIRECTION_SOUTH: 
-                col --;
                 row ++;
                 break;
             case DIRECTION_WEST: 
                 col --;
-                row --;
                 break;
         }
     } 

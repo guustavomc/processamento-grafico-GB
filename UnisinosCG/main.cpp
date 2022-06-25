@@ -43,6 +43,7 @@ int tileSetCols = 9, tileSetRows = 9;
 float tileW, tileW2;
 float tileH, tileH2;
 int cx = 0, cy = 0;
+bool jogoFinalizado = false;
 
 TilemapView* tview = new DiamondView();
 TileMap* tmap = NULL;
@@ -59,10 +60,10 @@ TileMap* readMap(char* filename) {
 		for (int c = 0; c < w; c++) {
 			int tid;
 			arq >> tid;
-			cout << tid << " ";
+		//	cout << tid << " ";
 			tmap->setTile(c, h - r - 1, tid);
 		}
-		cout << endl;
+	//	cout << endl;
 	}
 	arq.close();
 	return tmap;
@@ -121,16 +122,37 @@ void moveObject(int c, int r, const int direction) {
 		return; // posição inválida!
 	}
 
+	if (c == 9) {
+		cout << "Muito bem! Sully esta muito feliz por ter chegado ao outro lado do mapa! Pressione espaço se quiser reiniciar a partida" << endl;
+		jogoFinalizado = true;
+		cx = -1;
+		cy = -1;
+		return;
+	}
+
 	unsigned char t_id = collideMap->getTile(c, r);
 	if(t_id == 0) cout << "Terra" << endl;
-	else if(t_id == 1) cout << "Agua" << endl;
+	else if (t_id == 1) {
+		cout << "Ops! Voce deixou o Sully cair na agua... Pressione espaço para reiniciar a partida" << endl;
+		jogoFinalizado = true;
+		cx = -1;
+		cy = -1;
+		return;
+	};
 
 	cout << "Posicao c=" << c << "," << r << endl;
 	cx = c; cy = r;
 }
 
+void restart() {
+	cx = 0;
+	cy = 0;
+	jogoFinalizado = 0;
+}
+
 int main()
 {
+
 #pragma region inicialização do OpenGL
 	restart_gl_log();
 	// all the GLFW and GLEW start-up code is moved to here in gl_utils.cpp
@@ -153,10 +175,10 @@ int main()
 	tileH = 1.0f / (float)tileSetRows;
 	tileH2 = tileH / 2.0f;
 
-	cout << "tw=" << tw << " th=" << th << " tw2=" << tw2 << " th2=" << th2
-		<< " tileW=" << tileW << " tileH=" << tileH
-		<< " tileW2=" << tileW2 << " tileH2=" << tileH2
-		<< endl;
+	//cout << "tw=" << tw << " th=" << th << " tw2=" << tw2 << " th2=" << th2
+	//	<< " tileW=" << tileW << " tileH=" << tileH
+	//	<< " tileW2=" << tileW2 << " tileH2=" << tileH2
+	//	<< endl;
 #pragma endregion
 
 #pragma region carregamento de texturas e associação com tmap
@@ -313,14 +335,19 @@ int main()
 	for (int r = 0; r < tmap->getHeight(); r++) {
 		for (int c = 0; c < tmap->getWidth(); c++) {
 			unsigned char t_id = tmap->getTile(c, r);
-			cout << ((int)t_id) << " ";
+	//		cout << ((int)t_id) << " ";
 		}
-		cout << endl;
+	//	cout << endl;
 	}
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	// glEnable(GL_DEPTH_TEST);
+
+
+#pragma region instruções
+	cout << "Jogo iniciado! Sully tem a missão de atravessar o mapa sem se molhar, ajude-o nesta jornada. Boa sorte!" << endl;
+#pragma endregion
 
 #pragma region inicialização das variáveis
 	float fw = 0.25f;
@@ -336,6 +363,7 @@ int main()
 	bool leftPressed = false;
 	bool upPressed = false;
 	bool downPressed = false;
+	bool spacePressed = false;
 
 	while (!glfwWindowShouldClose(g_window))
 	{
@@ -428,7 +456,7 @@ int main()
 			offsetx = fw * (float)frameAtual;
 			offsety = fh * (float)acao;
 		}
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		if(!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 #pragma endregion
 
 #pragma region Eventos
@@ -473,6 +501,15 @@ int main()
 		if (GLFW_RELEASE == downState && downPressed) {
 			moveObject(cx, cy, DIRECTION_SOUTH);
 			downPressed = false;
+		}
+
+		const int spaceState = glfwGetKey(g_window, GLFW_KEY_SPACE);
+		if (GLFW_PRESS == spaceState) {
+			spacePressed = true;
+		}
+		if (GLFW_RELEASE == spaceState && spacePressed) {
+			restart();
+			spacePressed = false;
 		}
 		
 #pragma endregion
