@@ -410,24 +410,6 @@ int main()
 		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
 		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
 
-		if ((current_seconds - previous) > (0.16))
-		{
-			previous = current_seconds;
-
-			// CALCULA TROCA DE LINHA
-			if (frameAtual == 3)
-			{
-				acao = (4 + (acao - 1)) % 4;
-				frameAtual = 0;
-			}
-			else
-			{
-				frameAtual = (frameAtual + 1) % 4;
-			}
-
-			offsetx = fw * (float)frameAtual;
-			offsety = fh * (float)acao;
-		}
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 #pragma endregion
 
@@ -445,6 +427,10 @@ int main()
 		}
 		if (GLFW_RELEASE == rightState && rightPressed) {
 			moveObject(cx, cy, DIRECTION_EAST);
+			acao = (4 + (1)) % 4;
+			frameAtual = (frameAtual + 1) % 4;
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
 			rightPressed = false;
 		}
 
@@ -454,6 +440,10 @@ int main()
 		}
 		if (GLFW_RELEASE == leftState && leftPressed) {
 			moveObject(cx, cy, DIRECTION_WEST);
+			acao = (4 + (2)) % 4;
+			frameAtual = (frameAtual + 1) % 4;
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
 			leftPressed = false;
 		}
 
@@ -463,6 +453,10 @@ int main()
 		}
 		if (GLFW_RELEASE == upState && upPressed) {
 			moveObject(cx, cy, DIRECTION_NORTH);
+			acao = (4 + (0)) % 4;
+			frameAtual = (frameAtual + 1) % 4;
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
 			upPressed = false;
 		}
 
@@ -472,6 +466,10 @@ int main()
 		}
 		if (GLFW_RELEASE == downState && downPressed) {
 			moveObject(cx, cy, DIRECTION_SOUTH);
+			acao = (4 + (3)) % 4;
+			frameAtual = (frameAtual + 1) % 4;
+			offsetx = fw * (float)frameAtual;
+			offsety = fh * (float)acao;
 			downPressed = false;
 		}
 		
