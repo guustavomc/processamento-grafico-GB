@@ -23,13 +23,6 @@
 
 using namespace std;
 
-
-/* Command line build:
-  g++ -framework Cocoa -framework OpenGL -framework IOKit -o demoIsom gl_utils.cpp maths_funcs.cpp stb_image.cpp _isometrico.cpp  -I include -I/sw/include -I/usr/local/include -I ../common/include ../common/osx_64/libGLEW.a ../common/osx_64/libglfw3.a
- */
-
-using namespace std;
-
 int g_gl_width = 800;
 int g_gl_height = 800;
 float xi = -1.0f;
@@ -190,9 +183,13 @@ int main()
 	tmap->setTid(tid);
 	cout << "Tmap inicializado" << endl;
 
-	unsigned int texturaObjeto;
-	glGenTextures(1, &texturaObjeto);
-	glBindTexture(GL_TEXTURE_2D, texturaObjeto);
+	unsigned int texturaObjeto1;
+	glGenTextures(1, &texturaObjeto1);
+	glBindTexture(GL_TEXTURE_2D, texturaObjeto1);
+
+	unsigned int texturaObjeto2;
+	glGenTextures(1, &texturaObjeto2);
+	glBindTexture(GL_TEXTURE_2D, texturaObjeto2);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -223,6 +220,28 @@ int main()
 		std::cout << "Failed to load texture" << std::endl;
 	}
 	stbi_image_free(data);
+
+
+	// MAPEAMENTO PARA KEY
+	// MEXEMOS AQUI
+	unsigned char* data1 = stbi_load("images/key.png", &width, &height, &nrChannels, 0);
+	if (data1)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data1);
+		// MAPEAMENTO PARA SULLY
+		// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data1);
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data1);
+	
+	
+
+
 #pragma endregion
 
 #pragma region vertices
@@ -244,13 +263,23 @@ int main()
 		 -2.8f, -1.0f, 0.0f, 0.0f, // bottom left
 		 -2.8f, -0.8f, 0.0f, 0.25f, // top left
 	};
+
+	//MEXEMOS AQUI
+	float verticesKey[] = {
+	 -2.6f, -0.8f, 0.25f, 0.25f, // top right
+	 -2.6f, -1.0f, 0.25f, 0.0f,  // bottom right
+	 -2.8f, -1.0f, 0.0f, 0.0f,   // bottom left
+	 -2.8f, -0.8f, 0.0f, 0.25f,  // top left
+	};
 #pragma endregion
 
+
 #pragma region passagem dados para GPU
-	unsigned int VBOCenario, VBOObjeto, VAO, EBO;
+	unsigned int VBOCenario, VBOObjeto, VAO, EBO, VBOKey;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBOCenario);
 	glGenBuffers(1, &VBOObjeto);
+	glGenBuffers(1, &VBOKey);//MEXEMOS AQUI
 	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
@@ -274,6 +303,18 @@ int main()
 	// texture coord attribute
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(3);
+
+
+	// MEXEMOS AQUI
+	// key
+	glBindBuffer(GL_ARRAY_BUFFER, VBOKey);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesKey), verticesKey, GL_STATIC_DRAW);
+	// position attribute
+	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(4);
+	// texture coord attribute
+	glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(5);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -425,8 +466,16 @@ int main()
 		glBindBuffer(GL_ARRAY_BUFFER, VBOObjeto);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texturaObjeto);
+		glBindTexture(GL_TEXTURE_2D, texturaObjeto1);
 		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
+
+		// MEXEMOS AQUI
+		glBindBuffer(GL_ARRAY_BUFFER, VBOKey);
+		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texturaObjeto2);
+		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
+
 
 		glUseProgram(shader_programme);
 
