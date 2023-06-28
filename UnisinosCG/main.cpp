@@ -53,28 +53,28 @@ TileMap* readMap(char* filename) {
 		for (int c = 0; c < w; c++) {
 			int tid;
 			arq >> tid;
-		//	cout << tid << " ";
+			//	cout << tid << " ";
 			tmap->setTile(c, h - r - 1, tid);
 		}
-	//	cout << endl;
+		//	cout << endl;
 	}
 	arq.close();
 	return tmap;
 }
 
-int loadTexture(unsigned int& texture, char* filename)
+void loadTexture(unsigned int& texture_id, char* filename)
 {
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glGenTextures(1, &texture_id);
+	glBindTexture(GL_TEXTURE_2D, texture_id);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	// configuração para nao se repetir textura ao sair da tela:
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);// GL_REPEAT --> repete
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
 	GLfloat max_aniso = 0.0f;
 	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_aniso);
-	// set the maximum!
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_aniso);
 
 	int width, height, nrChannels;
@@ -97,10 +97,11 @@ int loadTexture(unsigned int& texture, char* filename)
 	else
 	{
 		std::cout << "Failed to load texture" << std::endl;
+		printf("%s", filename);
 	}
 	stbi_image_free(data);
-	return 1;
 }
+
 
 void SRD2SRU(double& mx, double& my, float& x, float& y) {
 	x = xi + (mx / g_gl_width) * w;
@@ -112,11 +113,11 @@ void moveObject(int c, int r, const int direction) {
 
 	if ((c < 0) || (c >= collideMap->getWidth()) || (r < 0) || (r >= collideMap->getHeight())) {
 		cout << "Fora do mapa: " << c << ", " << r << endl;
-		return; // posi��o inv�lida!
+		return; // posi  o inv lida!
 	}
 
 	if (c == 9) {
-		cout << "Muito bem! Sully esta muito feliz por ter chegado ao outro lado do mapa! Pressione espa�o se quiser reiniciar a partida" << endl;
+		cout << "Muito bem! Sully esta muito feliz por ter chegado ao outro lado do mapa! Pressione espa o se quiser reiniciar a partida" << endl;
 		jogoFinalizado = true;
 		cx = -1;
 		cy = -1;
@@ -124,7 +125,7 @@ void moveObject(int c, int r, const int direction) {
 	}
 
 	unsigned char t_id = collideMap->getTile(c, r);
-	if(t_id == 0) cout << "Terra" << endl;
+	if (t_id == 0) cout << "Terra" << endl;
 	else if (t_id == 1) {
 		cout << "Ops! Voce deixou o Sully cair na agua... Pressione espaco para reiniciar a partida" << endl;
 		jogoFinalizado = true;
@@ -173,16 +174,22 @@ int main()
 	//	<< " tileW2=" << tileW2 << " tileH2=" << tileH2
 	//	<< endl;
 #pragma endregion
-
+	
 #pragma region carregamento de texturas e associacao com tmap
 	// cenario
 	GLuint tid;
 	loadTexture(tid, "images/terrain.png");
 
-
 	tmap->setTid(tid);
 	cout << "Tmap inicializado" << endl;
 
+	unsigned int texturaObjeto1;
+	loadTexture(texturaObjeto1, "images/sully.png");
+
+	unsigned int texturaObjeto2;
+	loadTexture(texturaObjeto2, "images/key.png");
+
+	/*
 	unsigned int texturaObjeto1;
 	glGenTextures(1, &texturaObjeto1);
 	glBindTexture(GL_TEXTURE_2D, texturaObjeto1);
@@ -221,7 +228,6 @@ int main()
 	}
 	stbi_image_free(data);
 
-
 	// MAPEAMENTO PARA KEY
 	// MEXEMOS AQUI
 	unsigned char* data1 = stbi_load("images/key.png", &width, &height, &nrChannels, 0);
@@ -238,8 +244,8 @@ int main()
 		std::cout << "Failed to load texture" << std::endl;
 	}
 	stbi_image_free(data1);
-	
-	
+	*/
+
 
 
 #pragma endregion
@@ -284,7 +290,7 @@ int main()
 
 	glBindVertexArray(VAO);
 
-	// cen�rio
+	// cen rio
 	glBindBuffer(GL_ARRAY_BUFFER, VBOCenario);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCenario), verticesCenario, GL_STATIC_DRAW);
 	// position attribute
@@ -376,9 +382,9 @@ int main()
 	for (int r = 0; r < tmap->getHeight(); r++) {
 		for (int c = 0; c < tmap->getWidth(); c++) {
 			unsigned char t_id = tmap->getTile(c, r);
-	//		cout << ((int)t_id) << " ";
+			//		cout << ((int)t_id) << " ";
 		}
-	//	cout << endl;
+		//	cout << endl;
 	}
 
 	glEnable(GL_BLEND);
@@ -406,6 +412,10 @@ int main()
 	bool downPressed = false;
 	bool spacePressed = false;
 
+	GLuint previous_program = 0;
+	glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&previous_program);
+
+
 	while (!glfwWindowShouldClose(g_window))
 	{
 		_update_fps_counter(g_window);
@@ -432,12 +442,12 @@ int main()
 		glBindBuffer(GL_ARRAY_BUFFER, VBOCenario);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), false);
 
-		//para cada linha e columa da matriz � calculada a posi��o de desenho chamando computeDrawPosition
+		//para cada linha e columa da matriz   calculada a posi  o de desenho chamando computeDrawPosition
 		float x, y;
 		int r = 0, c = 0;
 		for (int r = 0; r < tmap->getHeight(); r++) {
 			for (int c = 0; c < tmap->getWidth(); c++) {
-				//t_id: n� do tile na matriz usado para calcular a por��o da textura que deve ser apresentada nesse tile
+				//t_id: n  do tile na matriz usado para calcular a por  o da textura que deve ser apresentada nesse tile
 				int t_id = (int)tmap->getTile(c, r);
 				int u = t_id % tileSetCols;
 				int v = t_id / tileSetCols;
@@ -449,7 +459,7 @@ int main()
 				glUniform1f(glGetUniformLocation(shader_programme, "tx"), x);
 				glUniform1f(glGetUniformLocation(shader_programme, "ty"), y + 1.0);
 				glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.50);
-		
+
 				//adiciona cor ao tile selecionado
 				glUniform1f(glGetUniformLocation(shader_programme, "weight"), (c == cx) && (r == cy) ? 0.5 : 0.0);
 
@@ -469,25 +479,36 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, texturaObjeto1);
 		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 
+		glUseProgram(shader_programme);
+
+		float tx, ty;
+		tview->computeDrawPosition(cx, cy, tw, th, tx, ty);
+		glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx);
+		glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty);
+		glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), offsetx);
+		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
+		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
+
+		if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 		// MEXEMOS AQUI
+	
 		glBindBuffer(GL_ARRAY_BUFFER, VBOKey);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texturaObjeto2);
 		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 
-
 		glUseProgram(shader_programme);
 
-		float tx, ty;
-		tview->computeDrawPosition(cx, cy, tw, th, tx, ty);
-		glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 +  tx);
-		glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty);
+		tview->computeDrawPosition(2, 2, tw, th, tx, ty);
+		glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8);
+		glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), offsetx);
 		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
 		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
 
-		if(!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 #pragma endregion
 
 #pragma region Eventos
@@ -558,7 +579,7 @@ int main()
 			restart();
 			spacePressed = false;
 		}
-		
+
 #pragma endregion
 
 		// put the stuff we've been drawing onto the display
