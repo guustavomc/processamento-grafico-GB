@@ -169,10 +169,6 @@ int main()
 	tileH = 1.0f / (float)tileSetRows;
 	tileH2 = tileH / 2.0f;
 
-	//cout << "tw=" << tw << " th=" << th << " tw2=" << tw2 << " th2=" << th2
-	//	<< " tileW=" << tileW << " tileH=" << tileH
-	//	<< " tileW2=" << tileW2 << " tileH2=" << tileH2
-	//	<< endl;
 #pragma endregion
 	
 #pragma region carregamento de texturas e associacao com tmap
@@ -183,70 +179,12 @@ int main()
 	tmap->setTid(tid);
 	cout << "Tmap inicializado" << endl;
 
+	// 
 	unsigned int texturaObjeto1;
 	loadTexture(texturaObjeto1, "images/sully.png");
 
 	unsigned int texturaObjeto2;
-	loadTexture(texturaObjeto2, "images/key.png");
-
-	/*
-	unsigned int texturaObjeto1;
-	glGenTextures(1, &texturaObjeto1);
-	glBindTexture(GL_TEXTURE_2D, texturaObjeto1);
-
-	unsigned int texturaObjeto2;
-	glGenTextures(1, &texturaObjeto2);
-	glBindTexture(GL_TEXTURE_2D, texturaObjeto2);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-	GLfloat max_aniso = 0.0f;
-	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_aniso);
-	// set the maximum!
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_aniso);
-
-	int width, height, nrChannels;
-
-	// unsigned char *data = stbi_load("spritesheet-muybridge.jpg", &width, &height, &nrChannels, 0);
-	//unsigned char* data = stbi_load("spritesheet-muybridge.png", &width, &height, &nrChannels, 0);
-	// MAPEAMENTO PARA SULLY
-	unsigned char* data = stbi_load("images/sully.png", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		// MAPEAMENTO PARA SULLY
-		// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture" << std::endl;
-	}
-	stbi_image_free(data);
-
-	// MAPEAMENTO PARA KEY
-	// MEXEMOS AQUI
-	unsigned char* data1 = stbi_load("images/key.png", &width, &height, &nrChannels, 0);
-	if (data1)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data1);
-		// MAPEAMENTO PARA SULLY
-		// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data1);
-
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture" << std::endl;
-	}
-	stbi_image_free(data1);
-	*/
-
-
+	loadTexture(texturaObjeto2, "images/key2.png");
 
 #pragma endregion
 
@@ -272,21 +210,22 @@ int main()
 
 	//MEXEMOS AQUI
 	float verticesKey[] = {
-	 -2.6f, -0.8f, 0.25f, 0.25f, // top right
-	 -2.6f, -1.0f, 0.25f, 0.0f,  // bottom right
-	 -2.8f, -1.0f, 0.0f, 0.0f,   // bottom left
-	 -2.8f, -0.8f, 0.0f, 0.25f,  // top left
+		 -2.6f, -0.8f, 1.0f, 1.0f, // top right
+		 -2.6f, -1.0f, 1.0f, 0.0f,  // bottom right
+		 -2.8f, -1.0f, 0.0f, 0.0f,   // bottom left
+		 -2.8f, -0.8f, 0.0f, 1.0f,  // top left
 	};
 #pragma endregion
 
 
 #pragma region passagem dados para GPU
-	unsigned int VBOCenario, VBOObjeto, VAO, EBO, VBOKey;
+	unsigned int VBOCenario, VBOObjeto, VAO, EBOObjeto, EBOKey,VBOKey;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBOCenario);
 	glGenBuffers(1, &VBOObjeto);
 	glGenBuffers(1, &VBOKey);//MEXEMOS AQUI
-	glGenBuffers(1, &EBO);
+	glGenBuffers(1, &EBOObjeto);
+	glGenBuffers(1, &EBOKey);
 
 	glBindVertexArray(VAO);
 
@@ -310,6 +249,8 @@ int main()
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOObjeto);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// MEXEMOS AQUI
 	// key
@@ -322,7 +263,7 @@ int main()
 	glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(5);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOKey);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 #pragma endregion
 
@@ -473,6 +414,26 @@ int main()
 #pragma endregion
 
 #pragma region Objeto
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBOKey);
+		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texturaObjeto2);
+		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
+
+		glUseProgram(shader_programme);
+
+		float tx1, ty1;
+		
+		tview->computeDrawPosition(2, 2, tw, th, tx1, ty1);
+		glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx1);
+		glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty1);
+		//glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
+		//glUniform1f(glGetUniformLocation(shader_programme, "offsety"), 0);
+		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
+
+		if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 		glBindBuffer(GL_ARRAY_BUFFER, VBOObjeto);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
 		glActiveTexture(GL_TEXTURE0);
@@ -490,25 +451,8 @@ int main()
 		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
 
 		if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		// MEXEMOS AQUI
 	
-		glBindBuffer(GL_ARRAY_BUFFER, VBOKey);
-		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texturaObjeto2);
-		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 
-		glUseProgram(shader_programme);
-
-		tview->computeDrawPosition(2, 2, tw, th, tx, ty);
-		glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8);
-		glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0);
-		glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), offsetx);
-		glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
-		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
-
-		if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 #pragma endregion
 
 #pragma region Eventos
