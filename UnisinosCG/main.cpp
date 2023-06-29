@@ -102,11 +102,11 @@ void loadTexture(unsigned int& texture_id, char* filename)
 	stbi_image_free(data);
 }
 
-
-void SRD2SRU(double& mx, double& my, float& x, float& y) {
+/*void SRD2SRU(double& mx, double& my, float& x, float& y) {
 	x = xi + (mx / g_gl_width) * w;
 	y = yi + (1 - (my / g_gl_height)) * h;
 }
+*/
 
 void moveObject(int c, int r, const int direction) {
 	tview->computeTileWalking(c, r, direction);
@@ -186,6 +186,9 @@ int main()
 	unsigned int texturaObjeto2;
 	loadTexture(texturaObjeto2, "images/key2.png");
 
+	unsigned int texturaObjeto3;
+	loadTexture(texturaObjeto3, "images/close_chest.png");
+
 #pragma endregion
 
 #pragma region vertices
@@ -215,17 +218,26 @@ int main()
 		 -2.8f, -1.0f, 0.0f, 0.0f,   // bottom left
 		 -2.8f, -0.8f, 0.0f, 1.0f,  // top left
 	};
+
+	float verticesChest[] = {
+		 -2.6f, -0.8f, 1.0f, 1.0f, // top right
+		 -2.6f, -1.0f, 1.0f, 0.0f,  // bottom right
+		 -2.8f, -1.0f, 0.0f, 0.0f,   // bottom left
+		 -2.8f, -0.8f, 0.0f, 1.0f,  // top left
+	};
 #pragma endregion
 
 
 #pragma region passagem dados para GPU
-	unsigned int VBOCenario, VBOObjeto, VAO, EBOObjeto, EBOKey,VBOKey;
+	unsigned int VBOCenario, VBOObjeto, VBOChest, VAO, EBOObjeto, EBOKey, EBOChest, VBOKey;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBOCenario);
 	glGenBuffers(1, &VBOObjeto);
+	glGenBuffers(1, &VBOChest);
 	glGenBuffers(1, &VBOKey);//MEXEMOS AQUI
 	glGenBuffers(1, &EBOObjeto);
 	glGenBuffers(1, &EBOKey);
+	glGenBuffers(1, &EBOChest);
 
 	glBindVertexArray(VAO);
 
@@ -264,6 +276,19 @@ int main()
 	glEnableVertexAttribArray(5);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOKey);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	// key
+	glBindBuffer(GL_ARRAY_BUFFER, VBOChest);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesChest), verticesChest, GL_STATIC_DRAW);
+	// position attribute
+	glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(6);
+	// texture coord attribute
+	glVertexAttribPointer(7, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(7);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOChest);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 #pragma endregion
 
@@ -421,7 +446,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, texturaObjeto2);
 		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 
-		glUseProgram(shader_programme);
+		//glUseProgram(shader_programme);
 
 		float tx1, ty1;
 		
@@ -434,13 +459,43 @@ int main()
 
 		if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+		float tx2, ty2;
+
+		tview->computeDrawPosition(4, 4, tw, th, tx1, ty1);
+		glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx1);
+		glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty1);
+		//glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
+		//glUniform1f(glGetUniformLocation(shader_programme, "offsety"), 0);
+		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
+
+		if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBOChest);
+		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texturaObjeto3);
+		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
+
+		//glUseProgram(shader_programme);
+
+		float tx3, ty3;
+
+		tview->computeDrawPosition(9, 8, tw, th, tx3, ty3);
+		glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx3);
+		glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty3);
+		//glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
+		//glUniform1f(glGetUniformLocation(shader_programme, "offsety"), 0);
+		glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
+
+		if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 		glBindBuffer(GL_ARRAY_BUFFER, VBOObjeto);
 		glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texturaObjeto1);
 		glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
 
-		glUseProgram(shader_programme);
+		//glUseProgram(shader_programme);
 
 		float tx, ty;
 		tview->computeDrawPosition(cx, cy, tw, th, tx, ty);
