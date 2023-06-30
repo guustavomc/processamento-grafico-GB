@@ -38,6 +38,9 @@ int cx = 0, cy = 0;
 bool jogoFinalizado = false;
 int keysCollected = 0;
 
+int verifyPath[10][10];
+
+
 
 TilemapView* tview = new DiamondView();
 TileMap* tmap = NULL;
@@ -115,6 +118,13 @@ void loadTexture(unsigned int& texture_id, char* filename)
 }
 */
 
+void restartMatrix(int matrix[10][10]) {
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            matrix[i][j] = 0; // Reset each element to 0
+        }
+    }
+}
 
 
 void moveObject(int c, int r, const int direction) {
@@ -132,8 +142,10 @@ void moveObject(int c, int r, const int direction) {
     if (c == 9) {
         cout << "Muito bem! Sully esta muito feliz por ter chegado ao outro lado do mapa! Pressione espa o se quiser reiniciar a partida" << endl;
         jogoFinalizado = true;
+        keysCollected = 0;
         cx = -1;
         cy = -1;
+        restartMatrix(verifyPath);
         return;
     }
 
@@ -147,14 +159,24 @@ void moveObject(int c, int r, const int direction) {
         keysCollected = 0;
         cx = -1;
         cy = -1;
+        restartMatrix(verifyPath);
         return;
     };
 
 
-
     cout << "Posicao c=" << c << "," << r << endl;
     cx = c; cy = r;
+
+    if (verifyPath[cx][cy] == 1) {
+        jogoFinalizado = true;
+        keysCollected = 0;
+        cx = -1;
+        cy = -1;
+        restartMatrix(verifyPath);
+        return;
+    }
 }
+
 
 void restart() {
     cx = 0;
@@ -185,9 +207,6 @@ int main() {
     tileW2 = tileW / 2.0f;
     tileH = 1.0f / (float)tileSetRows;
     tileH2 = tileH / 2.0f;
-
-    int verifyPath[10][10];
-
 
 #pragma endregion
 
@@ -605,7 +624,11 @@ int main() {
             cout << "Chaves coletadas:" << keysCollected << endl;
         }
         //-------------
-
+        /*
+        if (verifyPath[cx][cy] == 1) {
+            restart();
+        }
+        */
 
 #pragma endregion
 
@@ -691,6 +714,8 @@ int main() {
             restart();
             spacePressed = false;
         }
+
+        
 
 
 
