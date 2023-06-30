@@ -20,11 +20,7 @@
 #include "ltMath.h"
 #include <fstream>
 
-
-
 using namespace std;
-
-
 
 int g_gl_width = 800;
 int g_gl_height = 800;
@@ -40,18 +36,14 @@ float tileW, tileW2;
 float tileH, tileH2;
 int cx = 0, cy = 0;
 bool jogoFinalizado = false;
-
+int keysCollected = 0;
 
 
 TilemapView* tview = new DiamondView();
 TileMap* tmap = NULL;
 TileMap* collideMap = NULL;
 
-
-
 GLFWwindow* g_window = NULL;
-
-
 
 TileMap* readMap(char* filename) {
     ifstream arq(filename);
@@ -70,8 +62,6 @@ TileMap* readMap(char* filename) {
     arq.close();
     return tmap;
 }
-
-
 
 void loadTexture(unsigned int& texture_id, char* filename)
 {
@@ -92,11 +82,7 @@ void loadTexture(unsigned int& texture_id, char* filename)
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_aniso);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_aniso);
 
-
-
     int width, height, nrChannels;
-
-
 
     unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
     if (data)
@@ -158,6 +144,7 @@ void moveObject(int c, int r, const int direction) {
     else if (t_id == 1) {
         cout << "Ops! Voce deixou o Sully cair na agua... Pressione espaco para reiniciar a partida" << endl;
         jogoFinalizado = true;
+        keysCollected = 0;
         cx = -1;
         cy = -1;
         return;
@@ -169,17 +156,13 @@ void moveObject(int c, int r, const int direction) {
     cx = c; cy = r;
 }
 
-
-
 void restart() {
     cx = 0;
     cy = 0;
     jogoFinalizado = 0;
 }
 
-
-
-int main(){
+int main() {
 
 #pragma region inicializacao do OpenGL
     restart_gl_log();
@@ -189,8 +172,6 @@ int main(){
     glEnable(GL_DEPTH_TEST); // enable depth-testing
     glDepthFunc(GL_LESS);
 #pragma endregion
-
-
 
 #pragma region carregamento do tmap e collideMap
     cout << "Tentando criar tmap" << endl;
@@ -205,6 +186,7 @@ int main(){
     tileH = 1.0f / (float)tileSetRows;
     tileH2 = tileH / 2.0f;
 
+    int verifyPath[10][10];
 
 
 #pragma endregion
@@ -225,7 +207,7 @@ int main(){
     loadTexture(texturaKey, "images/key2.png");
 
     unsigned int texturaChest;
-    loadTexture(texturaChest, "images/close_chest.png");
+    loadTexture(texturaChest, "images/chests.png");
 
 #pragma endregion
 
@@ -342,7 +324,7 @@ int main(){
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesSully), indicesSully, GL_STATIC_DRAW);
 
     // Chest
-    
+
     unsigned int VAOChest, VBOChest, EBOChest;
     glGenVertexArrays(1, &VAOChest);
     glGenBuffers(1, &VBOChest);
@@ -361,7 +343,7 @@ int main(){
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOChest);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesChest), indicesChest, GL_STATIC_DRAW);
-    
+
 #pragma endregion
 
 #pragma region shaders
@@ -441,6 +423,14 @@ int main(){
     int acao = 3;
     int sign = 1;
     float previous = glfwGetTime();
+
+    int colKey1 = 2;
+    int rowKey1 = 2;
+    bool key1Collected = false;
+
+    int colKey2 = 6;
+    int rowKey2 = 6;
+    bool key2Collected = false;
 #pragma endregion
 
     bool rightPressed = false;
@@ -483,7 +473,7 @@ int main(){
         int r = 0, c = 0;
         for (int r = 0; r < tmap->getHeight(); r++) {
             for (int c = 0; c < tmap->getWidth(); c++) {
-                //t_id: n  do tile na matriz usado para calcular a por  o da textura que deve ser apresentada nesse tile
+                //t_id: n  do tile na matriz usado para calcular a por o da textura que deve ser apresentada nesse tile
                 int t_id = (int)tmap->getTile(c, r);
                 int u = t_id % tileSetCols;
                 int v = t_id / tileSetCols;
@@ -499,6 +489,13 @@ int main(){
                 //adiciona cor ao tile selecionado
                 glUniform1f(glGetUniformLocation(shader_programme, "weight"), (c == cx) && (r == cy) ? 0.5 : 0.0);
 
+                if (verifyPath[c][r] == 1) {
+                    glUniform1f(glGetUniformLocation(shader_programme, "weight"), 0.4);
+                }
+                else {
+                    glUniform1f(glGetUniformLocation(shader_programme, "weight"), 0);
+                }
+
                 // bind Texture
                 // glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, tmap->getTileSet());
@@ -509,7 +506,7 @@ int main(){
 #pragma endregion
 
 #pragma region Objeto
-        
+
         //Desenha Chaves
         glBindVertexArray(VAOKey);
         //glBindVertexArray(VAOSully);
@@ -523,7 +520,7 @@ int main(){
 
         float tx1, ty1;
 
-        tview->computeDrawPosition(2, 2, tw, th, tx1, ty1);
+        tview->computeDrawPosition(colKey1, rowKey1, tw, th, tx1, ty1);
         glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx1);
         glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty1);
         //glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
@@ -534,7 +531,7 @@ int main(){
 
         float tx3, ty3;
 
-        tview->computeDrawPosition(6, 6, tw, th, tx3, ty3);
+        tview->computeDrawPosition(colKey2, rowKey2, tw, th, tx3, ty3);
         glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx3);
         glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty3);
         //glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
@@ -564,10 +561,12 @@ int main(){
         glUniform1f(glGetUniformLocation(shader_programme, "offsety"), offsety);
         glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
 
+        verifyPath[cx][cy] = 1;
+
         if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         //-------------
         //Desenha Bau
-        
+
         glBindVertexArray(VAOChest);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBOChest);
@@ -581,14 +580,32 @@ int main(){
         tview->computeDrawPosition(9, 8, tw, th, tx2, ty2);
         glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx2);
         glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty2);
-        //glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
-        //glUniform1f(glGetUniformLocation(shader_programme, "offsety"), 0);
         glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
+        glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
+        if (keysCollected == 2) {
+            glUniform1f(glGetUniformLocation(shader_programme, "offsety"), 0);
+        }
+        else {
+            glUniform1f(glGetUniformLocation(shader_programme, "offsety"), 0.75f);
+        }
+        
+        
 
         if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        
+
         //-------------
-        
+        if (cx == colKey1 && cy == rowKey1 && !key1Collected) {
+            keysCollected++;
+            key1Collected = true;
+            cout << "Chaves coletadas:" << keysCollected << endl;
+        }
+        if (cx == colKey2 && cy == rowKey2 && !key2Collected) {
+            keysCollected++;
+            key2Collected = true;
+            cout << "Chaves coletadas:" << keysCollected << endl;
+        }
+        //-------------
+
 
 #pragma endregion
 
@@ -693,4 +710,3 @@ int main(){
     delete collideMap;
     return 0;
 }
-
