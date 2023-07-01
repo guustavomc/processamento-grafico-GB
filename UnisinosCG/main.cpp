@@ -36,11 +36,13 @@ float tileW, tileW2;
 float tileH, tileH2;
 int cx = 0, cy = 0;
 bool jogoFinalizado = false;
+
 int keysCollected = 0;
+bool key1Collected = false;
+bool key2Collected = false;
+
 
 int verifyPath[10][10];
-
-
 
 TilemapView* tview = new DiamondView();
 TileMap* tmap = NULL;
@@ -71,15 +73,11 @@ void loadTexture(unsigned int& texture_id, char* filename)
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
 
-
-
     // configuração para nao se repetir textura ao sair da tela:
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);// GL_REPEAT --> repete
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-
 
     GLfloat max_aniso = 0.0f;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_aniso);
@@ -110,34 +108,28 @@ void loadTexture(unsigned int& texture_id, char* filename)
     stbi_image_free(data);
 }
 
-
-
-/*void SRD2SRU(double& mx, double& my, float& x, float& y) {
-    x = xi + (mx / g_gl_width) * w;
-    y = yi + (1 - (my / g_gl_height)) * h;
-}
-*/
-
 void restartMatrix(int matrix[10][10]) {
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
             matrix[i][j] = 0; // Reset each element to 0
         }
     }
+   
 }
 
+void restartKeys(){
+    key1Collected = false;
+    key2Collected = false;
+
+}
 
 void moveObject(int c, int r, const int direction) {
     tview->computeTileWalking(c, r, direction);
 
-
-
     if ((c < 0) || (c >= collideMap->getWidth()) || (r < 0) || (r >= collideMap->getHeight())) {
         cout << "Fora do mapa: " << c << ", " << r << endl;
-        return; // posi  o inv lida!
+        return; 
     }
-
-
 
     if (c == 9) {
         cout << "Muito bem! Sully esta muito feliz por ter chegado ao outro lado do mapa! Pressione espa o se quiser reiniciar a partida" << endl;
@@ -146,10 +138,9 @@ void moveObject(int c, int r, const int direction) {
         cx = -1;
         cy = -1;
         restartMatrix(verifyPath);
+        restartKeys();
         return;
     }
-
-
 
     unsigned char t_id = collideMap->getTile(c, r);
     if (t_id == 0) cout << "Terra" << endl;
@@ -160,6 +151,7 @@ void moveObject(int c, int r, const int direction) {
         cx = -1;
         cy = -1;
         restartMatrix(verifyPath);
+        restartKeys();
         return;
     };
 
@@ -173,6 +165,7 @@ void moveObject(int c, int r, const int direction) {
         cx = -1;
         cy = -1;
         restartMatrix(verifyPath);
+        restartKeys();
         return;
     }
 }
@@ -181,6 +174,7 @@ void moveObject(int c, int r, const int direction) {
 void restart() {
     cx = 0;
     cy = 0;
+    keysCollected = 0;
     jogoFinalizado = 0;
 }
 
@@ -445,11 +439,10 @@ int main() {
 
     int colKey1 = 2;
     int rowKey1 = 2;
-    bool key1Collected = false;
+   
 
     int colKey2 = 6;
     int rowKey2 = 6;
-    bool key2Collected = false;
 #pragma endregion
 
     bool rightPressed = false;
@@ -586,29 +579,29 @@ int main() {
         //-------------
         //Desenha Bau
 
-        glBindVertexArray(VAOChest);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBOChest);
-        glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texturaChest);
-        glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
-
-        float tx2, ty2;
-
-        tview->computeDrawPosition(9, 8, tw, th, tx2, ty2);
-        glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx2);
-        glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty2);
-        glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
-        glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
+        
         if (keysCollected == 2) {
+            glBindVertexArray(VAOChest);
+
+            glBindBuffer(GL_ARRAY_BUFFER, VBOChest);
+            glUniform1f(glGetUniformLocation(shader_programme, "isObject"), true);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texturaChest);
+            glUniform1i(glGetUniformLocation(shader_programme, "sprite"), 0);
+
+            float tx2, ty2;
+
+            tview->computeDrawPosition(9, 8, tw, th, tx2, ty2);
+            glUniform1f(glGetUniformLocation(shader_programme, "tx"), 1.8 + tx2);
+            glUniform1f(glGetUniformLocation(shader_programme, "ty"), 1.0 + ty2);
+            glUniform1f(glGetUniformLocation(shader_programme, "layer_z"), 0.10);
+            glUniform1f(glGetUniformLocation(shader_programme, "offsetx"), 0);
             glUniform1f(glGetUniformLocation(shader_programme, "offsety"), 0);
+
+            if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
         }
-        else {
-            glUniform1f(glGetUniformLocation(shader_programme, "offsety"), 0.75f);
-        }
-        
-        
+
 
         if (!jogoFinalizado)glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -712,22 +705,16 @@ int main() {
         }
         if (GLFW_RELEASE == spaceState && spacePressed) {
             restart();
+            restartMatrix(verifyPath);
+            restartKeys();
             spacePressed = false;
         }
 
-        
-
-
-
 #pragma endregion
-
-
 
         // put the stuff we've been drawing onto the display
         glfwSwapBuffers(g_window);
     }
-
-
 
     // close GL context and any other GLFW resources
     glfwTerminate();
