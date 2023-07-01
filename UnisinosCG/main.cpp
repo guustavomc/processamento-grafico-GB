@@ -114,10 +114,10 @@ void restartMatrix(int matrix[10][10]) {
             matrix[i][j] = 0; // Reset each element to 0
         }
     }
-   
+
 }
 
-void restartKeys(){
+void restartKeys() {
     key1Collected = false;
     key2Collected = false;
 
@@ -128,7 +128,7 @@ void moveObject(int c, int r, const int direction) {
 
     if ((c < 0) || (c >= collideMap->getWidth()) || (r < 0) || (r >= collideMap->getHeight())) {
         cout << "Fora do mapa: " << c << ", " << r << endl;
-        return; 
+        return;
     }
 
     if (c == 9) {
@@ -207,7 +207,7 @@ int main() {
 #pragma region carregamento de texturas e associacao com tmap
     // cenario
     GLuint tid;
-    loadTexture(tid, "images/terrain.png");
+    loadTexture(tid, "images/terrain2.png");
 
     tmap->setTid(tid);
     cout << "Tmap inicializado" << endl;
@@ -220,7 +220,7 @@ int main() {
     loadTexture(texturaKey, "images/key2.png");
 
     unsigned int texturaChest;
-    loadTexture(texturaChest, "images/chests.png");
+    loadTexture(texturaChest, "images/2.png");
 
 #pragma endregion
 
@@ -439,7 +439,7 @@ int main() {
 
     int colKey1 = 2;
     int rowKey1 = 2;
-   
+
 
     int colKey2 = 6;
     int rowKey2 = 6;
@@ -579,7 +579,7 @@ int main() {
         //-------------
         //Desenha Bau
 
-        
+
         if (keysCollected == 2) {
             glBindVertexArray(VAOChest);
 
